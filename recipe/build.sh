@@ -179,6 +179,23 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
         # was added. Revisit later
         export USE_MKLDNN=0
     fi
+elif [[ ${hip_compiler_version} != "None" ]]; then
+    # ROCm/HIP build configuration
+    export USE_CUDA=0
+    export USE_ROCM=1
+    export USE_MKLDNN=1
+    export USE_MAGMA=1
+    export MAGMA_HOME="${PREFIX}"
+    export ROCM_HOME="${PREFIX}"
+    export HIP_PATH="${PREFIX}"
+    export NCCL_ROOT_DIR=$PREFIX
+    export NCCL_INCLUDE_DIR=$PREFIX/include
+    export USE_SYSTEM_NCCL=1
+
+    # PyTorch expects semicolon-delimited gfx targets; CONDA_FORGE_DEFAULT_ROCM_GPU_TARGETS already uses ';'
+    if [[ -n "${CONDA_FORGE_DEFAULT_ROCM_GPU_TARGETS:-}" ]]; then
+        export PYTORCH_ROCM_ARCH="${CONDA_FORGE_DEFAULT_ROCM_GPU_TARGETS}"
+    fi
 elif [[ ${cuda_compiler_version} != "None" ]]; then
     if [[ "$target_platform" == "linux-aarch64" ]]; then
         # https://github.com/pytorch/pytorch/pull/121975
