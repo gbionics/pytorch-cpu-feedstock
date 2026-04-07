@@ -148,6 +148,8 @@ requirements:
     - rocblas
     - rocsolver
     - rocrand
+    - rocthrust
+    - hipcub
     - hipblas
     - hipsparse
     - hiprand
@@ -309,6 +311,8 @@ outputs:
         - rocblas
         - rocsolver
         - rocrand
+        - rocthrust
+        - hipcub
         - hipblas
         - hipsparse
         - hiprand
