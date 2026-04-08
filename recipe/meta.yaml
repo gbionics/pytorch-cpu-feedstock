@@ -150,6 +150,7 @@ requirements:
     - rocrand
     - rocthrust
     - hipcub
+    - hipblas-common
     - hipblas
     - hipsparse
     - hiprand
