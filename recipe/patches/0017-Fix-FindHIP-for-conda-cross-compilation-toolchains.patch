@@ -1,0 +1,41 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: conda-forge
+Date: Wed, 9 Apr 2026 00:00:00 +0000
+Subject: [PATCH] Fix FindHIP for conda cross-compilation toolchains
+
+FindHIP.cmake uses find_path() to locate HIP_ROOT_DIR by searching for
+bin/hipconfig. In conda cross-compilation toolchains, cmake is invoked
+with CMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY which restricts find_path()
+to CMAKE_FIND_ROOT_PATH entries. Since the build prefix (where
+hipconfig lives) is not in CMAKE_FIND_ROOT_PATH, find_path() silently
+fails even though the file exists.
+
+Fix by pre-setting HIP_ROOT_DIR to ROCM_PATH before calling
+find_package(HIP), so FindHIP.cmake skips the problematic find_path().
+
+Also initialize ROCM_INCLUDE_DIRS to the host PREFIX include directory
+so that downstream header searches (e.g. rocm_version.h) succeed.
+
+---
+ cmake/public/LoadHIP.cmake | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/cmake/public/LoadHIP.cmake b/cmake/public/LoadHIP.cmake
+--- a/cmake/public/LoadHIP.cmake
++++ b/cmake/public/LoadHIP.cmake
+@@ -78,6 +78,15 @@ endmacro()
+ # Find the HIP Package
+ # MODULE argument is added for clarity that CMake is searching
+ # for FindHIP.cmake in Module mode
++# Set HIP_ROOT_DIR so that FindHIP.cmake skips its find_path() call,
++# which can fail when CMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY filters
++# out the build prefix (e.g. in conda cross-compilation toolchains).
++if(NOT HIP_ROOT_DIR)
++  set(HIP_ROOT_DIR ${ROCM_PATH} CACHE PATH "HIP installed location")
++endif()
++if(NOT ROCM_INCLUDE_DIRS)
++  set(ROCM_INCLUDE_DIRS $ENV{PREFIX}/include)
++endif()
+ find_package_and_print_version(HIP 1.0 MODULE)
+ 
+ if(HIP_FOUND)

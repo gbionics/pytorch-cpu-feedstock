@@ -186,8 +186,13 @@ elif [[ ${hip_compiler_version} != "None" ]]; then
     export USE_MKLDNN=1
     export USE_MAGMA=1
     export MAGMA_HOME="${PREFIX}"
-    export ROCM_HOME="${PREFIX}"
-    export HIP_PATH="${PREFIX}"
+    # ROCM_PATH, HIP_PATH and HIP_ROOT_DIR are mainly used to find FindHIP.cmake, that in
+    # conda is installed by the hip package in the build env, so let's point it to the build prefix
+    # even if then rocm libraries are found in the host prefix
+    export ROCM_PATH="${BUILD_PREFIX}"
+    export ROCM_HOME="${BUILD_PREFIX}"
+    export HIP_PATH="${BUILD_PREFIX}"
+    export HIP_ROOT_DIR="${BUILD_PREFIX}"
     export NCCL_ROOT_DIR=$PREFIX
     export NCCL_INCLUDE_DIR=$PREFIX/include
     export USE_SYSTEM_NCCL=1
@@ -196,6 +201,12 @@ elif [[ ${hip_compiler_version} != "None" ]]; then
     if [[ -n "${CONDA_FORGE_DEFAULT_ROCM_GPU_TARGETS:-}" ]]; then
         export PYTORCH_ROCM_ARCH="${CONDA_FORGE_DEFAULT_ROCM_GPU_TARGETS}"
     fi
+
+    # roctracer headers are in a subdirectory but kineto includes them without prefix
+    export CXXFLAGS="$CXXFLAGS -isystem ${PREFIX}/include/roctracer"
+
+    # Hipify: convert CUDA sources to HIP before building
+    $PREFIX/bin/python tools/amd_build/build_amd.py
 elif [[ ${cuda_compiler_version} != "None" ]]; then
     if [[ "$target_platform" == "linux-aarch64" ]]; then
         # https://github.com/pytorch/pytorch/pull/121975

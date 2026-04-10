@@ -56,10 +56,13 @@ source:
       # backport https://github.com/pytorch/pytorch/pull/174647
       - patches/0015-Fix-ICE-in-GCC-14-with-arm.patch
       - patches/0016-for-win-CUDA-remove-USE_CUDA-guard-for-skip-in-compi.patch         # [cuda_compiler_version != "None"]
+      - patches/0017-Fix-FindHIP-for-conda-cross-compilation-toolchains.patch          # [hip_compiler_version != "None"]
       - patches_submodules/tensorpipe/0001-switch-away-from-find_package-CUDA.patch
 
 build:
   number: {{ build }}
+  # Only build hip variant for now
+  skip: true  # [hip_compiler_version == "None"]
   # This logic allows two rc variants to be defined in the conda_build_config, but only one to actually be built.
   # We want to be able to define two variants in the cbc so we can assign different labels to each in the upload channel
   # (by zipping is_rc with channel_targets). This prevents rc builds being used unless specifically requested.
@@ -148,11 +151,16 @@ requirements:
     - rocblas
     - rocsolver
     - rocrand
+    - rocprim
     - rocthrust
+    - roctracer
     - hipcub
     - hipblas-common
     - hipblas
+    - hipblaslt
+    - hipfft
     - hipsparse
+    - hipsolver
     - hiprand
     - miopen-hip
     - rccl                  # [linux]
@@ -312,10 +320,14 @@ outputs:
         - rocblas
         - rocsolver
         - rocrand
+        - rocprim
         - rocthrust
+        - roctracer
         - hipcub
         - hipblas
+        - hipblaslt
         - hipsparse
+        - hipsolver
         - hiprand
         - miopen-hip
         - rccl                  # [linux]
