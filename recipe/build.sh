@@ -197,9 +197,15 @@ elif [[ ${hip_compiler_version} != "None" ]]; then
     export NCCL_INCLUDE_DIR=$PREFIX/include
     export USE_SYSTEM_NCCL=1
 
-    # PyTorch expects semicolon-delimited gfx targets; CONDA_FORGE_DEFAULT_ROCM_GPU_TARGETS already uses ';'
+    # PyTorch expects semicolon-delimited gfx targets; CONDA_FORGE_DEFAULT_ROCM_GPU_TARGETS should already use ';'.
+    echo "[DEBUG][ROCM] CONDA_FORGE_DEFAULT_ROCM_GPU_TARGETS='${CONDA_FORGE_DEFAULT_ROCM_GPU_TARGETS:-<unset>}'"
     if [[ -n "${CONDA_FORGE_DEFAULT_ROCM_GPU_TARGETS:-}" ]]; then
         export PYTORCH_ROCM_ARCH="${CONDA_FORGE_DEFAULT_ROCM_GPU_TARGETS}"
+    fi
+    echo "[DEBUG][ROCM] PYTORCH_ROCM_ARCH='${PYTORCH_ROCM_ARCH:-<unset>}'"
+    if [[ -n "${PYTORCH_ROCM_ARCH:-}" ]]; then
+        echo "[DEBUG][ROCM] PYTORCH_ROCM_ARCH entries (split on ';'):"
+        echo "${PYTORCH_ROCM_ARCH}" | tr ';' '\n' | sed 's/^/[DEBUG][ROCM]   - /'
     fi
 
     # roctracer headers are in a subdirectory but kineto includes them without prefix
