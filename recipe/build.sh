@@ -197,10 +197,13 @@ elif [[ ${hip_compiler_version} != "None" ]]; then
     export NCCL_INCLUDE_DIR=$PREFIX/include
     export USE_SYSTEM_NCCL=1
 
-    # PyTorch expects semicolon-delimited gfx targets; CONDA_FORGE_DEFAULT_ROCM_GPU_TARGETS should already use ';'.
+    # WORKAROUND: conda-build sets CONDA_FORGE_DEFAULT_ROCM_GPU_TARGETS *after* HIP activation
+    # scripts run, overriding the desired GPU targets. Read ROCK_THE_CONDA_ROCM_GPU_TARGETS
+    # directly (the source variable passed via script_env) to bypass this timing issue.
+    echo "[DEBUG][ROCM] ROCK_THE_CONDA_ROCM_GPU_TARGETS='${ROCK_THE_CONDA_ROCM_GPU_TARGETS:-<unset>}'"
     echo "[DEBUG][ROCM] CONDA_FORGE_DEFAULT_ROCM_GPU_TARGETS='${CONDA_FORGE_DEFAULT_ROCM_GPU_TARGETS:-<unset>}'"
-    if [[ -n "${CONDA_FORGE_DEFAULT_ROCM_GPU_TARGETS:-}" ]]; then
-        export PYTORCH_ROCM_ARCH="${CONDA_FORGE_DEFAULT_ROCM_GPU_TARGETS}"
+    if [[ -n "${ROCK_THE_CONDA_ROCM_GPU_TARGETS:-}" ]]; then
+        export PYTORCH_ROCM_ARCH="${ROCK_THE_CONDA_ROCM_GPU_TARGETS}"
     fi
     echo "[DEBUG][ROCM] PYTORCH_ROCM_ARCH='${PYTORCH_ROCM_ARCH:-<unset>}'"
     if [[ -n "${PYTORCH_ROCM_ARCH:-}" ]]; then
