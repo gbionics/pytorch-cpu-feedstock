@@ -125,8 +125,6 @@ requirements:
     - sccache   # [win]
     - grep      # [unix]
     - rsync     # [unix]
-    # numpy is a build dep of aotriton
-    - numpy *                                # [hip_compiler_version != "None"]
   host:
     # GPU requirements
     {% if cuda_compiler_version != "None" %}
@@ -169,8 +167,6 @@ requirements:
     - miopen-hip
     - rccl                  # [linux]
     - libmagma-devel
-    # liblzma-devel is a dependency of aotriton
-    - liblzma-devel
     {% endif %}
     # other requirements
     - python 3.12
