@@ -63,6 +63,8 @@ source:
 
 build:
   number: {{ build }}
+  script_env:
+    - ROCK_THE_CONDA_ROCM_GPU_TARGETS
   # Only build hip variant for now
   skip: true  # [hip_compiler_version == "None"]
   # This logic allows two rc variants to be defined in the conda_build_config, but only one to actually be built.
