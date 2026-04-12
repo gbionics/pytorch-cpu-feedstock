@@ -168,7 +168,7 @@ requirements:
     - hiprand
     - miopen-hip
     - rccl                  # [linux]
-    - libmagma-devel
+    - libmagma-devel * rocm*
     {% endif %}
     # other requirements
     - python 3.12
@@ -335,7 +335,7 @@ outputs:
         - hiprand
         - miopen-hip
         - rccl                  # [linux]
-        - libmagma-devel
+        - libmagma-devel * rocm*
         {% endif %}
         # other requirements
         - python
@@ -369,7 +369,8 @@ outputs:
         - llvm-openmp
         - libblas * *{{ blas_impl }}        # [blas_impl == "mkl"]
         - nomkl                             # [blas_impl != "mkl"]
-        - triton =={{ triton }}             # [(cuda_compiler_version != "None" or hip_compiler_version != "None") and not win]
+        - triton =={{ triton }} cuda*       # [cuda_compiler_version != "None" and not win]
+        - triton =={{ triton }} rocm*       # [hip_compiler_version != "None" and not win]
         # avoid that people without GPUs needlessly download ~0.5-1GB
         - __cuda                            # [cuda_compiler_version != "None"]
         - python
