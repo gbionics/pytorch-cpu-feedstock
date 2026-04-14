@@ -59,6 +59,7 @@ source:
       - patches/0017-Fix-FindHIP-for-conda-cross-compilation-toolchains.patch          # [hip_compiler_version != "None"]
       # backport https://github.com/pytorch/pytorch/pull/174105 (adapted for v2.10 test decorators)
       - patches/0018-Backport-ROCm-Bump-AOTriton-to-0.11.2b.patch                       # [hip_compiler_version != "None"]
+      - patches/0019-Fix-AT_MAGMA_VERSION-encoding-for-MAGMA-2.10.patch
       - patches_submodules/tensorpipe/0001-switch-away-from-find_package-CUDA.patch
 
 build:
