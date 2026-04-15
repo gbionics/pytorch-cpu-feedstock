@@ -1,17 +1,6 @@
-From 2b9ee57126a13e6e3ea4d6d9d97152042cbf03d6 Mon Sep 17 00:00:00 2001
-From: rock-the-conda
-Date: Tue, 14 Apr 2026 19:20:00 +0200
-Subject: [PATCH] Fix AT_MAGMA_VERSION encoding for MAGMA 2.10+
-
----
- .../ATen/native/cuda/linalg/BatchLinearAlgebra.cpp    | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
-
-diff --git a/aten/src/ATen/native/cuda/linalg/BatchLinearAlgebra.cpp b/aten/src/ATen/native/cuda/linalg/BatchLinearAlgebra.cpp
-index b0539bbf72d..df1f1e58f4c 100644
 --- a/aten/src/ATen/native/cuda/linalg/BatchLinearAlgebra.cpp
 +++ b/aten/src/ATen/native/cuda/linalg/BatchLinearAlgebra.cpp
-@@ -53,11 +53,11 @@ struct MagmaInitializer {
+@@ -53,11 +53,11 @@
  } initializer;
  }  // namespace (anonymous)
  
@@ -27,7 +16,7 @@ index b0539bbf72d..df1f1e58f4c 100644
  #endif
  
  #else
-@@ -183,7 +183,7 @@ void magmaGels(
+@@ -183,7 +183,7 @@
      scalar_t* dA, magma_int_t ldda, scalar_t* dB, magma_int_t lddb,
      scalar_t* hwork, magma_int_t lwork, magma_int_t* info);
  
@@ -36,11 +25,21 @@ index b0539bbf72d..df1f1e58f4c 100644
  
  template <>
  void magmaLdlHermitian<double>(
-@@ -1119,7 +1119,7 @@ Tensor& apply_cholesky_inverse(Tensor& input, bool upper) {
+@@ -239,7 +239,7 @@
+   AT_CUDA_CHECK(cudaGetLastError());
+ }
+ 
+-#endif // AT_MAGMA_VERSION >= 254
++#endif // AT_MAGMA_VERSION >= 20504
+ 
+ template<>
+ void magmaLu<double>(
+@@ -1120,7 +1120,7 @@
+     // If cusolver and magma 2.5.4+ are both available and hermitian=true,
+     // call magma for complex inputs
  #ifdef USE_LINALG_SOLVER
 -#if AT_MAGMA_ENABLED() && (AT_MAGMA_VERSION >= 254)
 +#if AT_MAGMA_ENABLED() && (AT_MAGMA_VERSION >= 20504)
-   // For the moment, linalg.cholesky_ex + linalg.cholesky_solve is slow because
-   // they allocate 1M elements each in output and infos
-   // We use custom kernels and magma cholesky_solve_batched for small inputs
-
+       if (LD.is_complex() && hermitian) {
+         return ldl_factor_magma(
+             LD, pivots, info, upper, hermitian);
