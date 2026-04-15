@@ -43,5 +43,4 @@ index b0539bbf72d..df1f1e58f4c 100644
    // For the moment, linalg.cholesky_ex + linalg.cholesky_solve is slow because
    // they allocate 1M elements each in output and infos
    // We use custom kernels and magma cholesky_solve_batched for small inputs
--- 
-2.45.2
+
