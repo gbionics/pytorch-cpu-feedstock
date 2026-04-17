@@ -203,6 +203,7 @@ requirements:
     - packaging
   run:
     - libblas * *{{ blas_impl }}        # [blas_impl == "mkl"]
+    - libmagma * rocm*                  # [hip_compiler_version != "None"]
   run_constrained:
     # https://github.com/conda-forge/pytorch-cpu-feedstock/issues/65
     - pytorch-cpu {{ version }}    # [cuda_compiler_version == "None" and hip_compiler_version == "None"]
@@ -377,6 +378,7 @@ outputs:
         - nomkl                             # [blas_impl != "mkl"]
         - triton =={{ triton }} cuda*       # [cuda_compiler_version != "None" and not win]
         - triton =={{ triton }} rocm*       # [hip_compiler_version != "None" and not win]
+        - libmagma * rocm*                  # [hip_compiler_version != "None"]
         # avoid that people without GPUs needlessly download ~0.5-1GB
         - __cuda                            # [cuda_compiler_version != "None"]
         - python
