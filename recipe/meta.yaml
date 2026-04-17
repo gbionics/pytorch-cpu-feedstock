@@ -154,7 +154,7 @@ requirements:
     - nccl                  # [linux]
     - nvtx-c
     {% elif hip_compiler_version != "None" %}
-    - rocm-core
+    - rocm-core {{ hip_compiler_version }}
     - rocblas
     - rocsolver
     - rocrand
@@ -270,6 +270,8 @@ outputs:
     script: build.sh    # [unix]
     script: bld.bat     # [win]
     build:
+      script_env:
+        - ROCK_THE_CONDA_ROCM_GPU_TARGETS
       string: cuda{{ cuda_compiler_version | replace('.', '') }}_{{ blas_impl }}_py{{ CONDA_PY }}_h{{ PKG_HASH }}_{{ build }}  # [cuda_compiler_version != "None"]
       string: rocm{{ hip_compiler_version | replace('.', '') }}_{{ blas_impl }}_py{{ CONDA_PY }}_h{{ PKG_HASH }}_{{ build }}  # [hip_compiler_version != "None"]
       string: cpu_{{ blas_impl }}_py{{ CONDA_PY }}_h{{ PKG_HASH }}_{{ build }}                                                 # [cuda_compiler_version == "None" and hip_compiler_version == "None"]
@@ -323,7 +325,7 @@ outputs:
         - nccl                  # [linux]
         - nvtx-c
         {% elif hip_compiler_version != "None" %}
-        - rocm-core
+        - rocm-core {{ hip_compiler_version }}
         - rocblas
         - rocsolver
         - rocrand
@@ -331,6 +333,7 @@ outputs:
         - rocthrust
         - roctracer
         - hipcub
+        - hipblas-common
         - hipblas
         - hipblaslt
         - hipsparse
@@ -400,6 +403,8 @@ outputs:
 
   - name: pytorch-tests
     build:
+      script_env:
+        - ROCK_THE_CONDA_ROCM_GPU_TARGETS
       string: cuda{{ cuda_compiler_version | replace('.', '') }}_{{ blas_impl }}_py{{ CONDA_PY }}_h{{ PKG_HASH }}_{{ build }}  # [cuda_compiler_version != "None"]
       string: rocm{{ hip_compiler_version | replace('.', '') }}_{{ blas_impl }}_py{{ CONDA_PY }}_h{{ PKG_HASH }}_{{ build }}  # [hip_compiler_version != "None"]
       string: cpu_{{ blas_impl }}_py{{ CONDA_PY }}_h{{ PKG_HASH }}_{{ build }}                                                 # [cuda_compiler_version == "None" and hip_compiler_version == "None"]
@@ -626,6 +631,8 @@ outputs:
   - name: pytorch-cpu   # [cuda_compiler_version == "None" and hip_compiler_version == "None"]
   - name: pytorch-gpu   # [cuda_compiler_version != "None" or hip_compiler_version != "None"]
     build:
+      script_env:
+        - ROCK_THE_CONDA_ROCM_GPU_TARGETS
       string: cuda{{ cuda_compiler_version | replace('.', '') }}_{{ blas_impl }}_h{{ PKG_HASH }}_{{ build }}    # [cuda_compiler_version != "None"]
       string: rocm{{ hip_compiler_version | replace('.', '') }}_{{ blas_impl }}_h{{ PKG_HASH }}_{{ build }}     # [hip_compiler_version != "None"]
       string: cpu_{{ blas_impl }}_h{{ PKG_HASH }}_{{ build }}                                                   # [cuda_compiler_version == "None" and hip_compiler_version == "None"]
