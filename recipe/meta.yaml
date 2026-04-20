@@ -478,7 +478,6 @@ outputs:
         - python -c "import torch; assert torch.backends.cudnn.is_available()"      # [cuda_compiler_version != "None"]
         - python -c "import torch; assert torch.backends.cudnn.enabled"             # [cuda_compiler_version != "None"]
         - python -c "import torch; assert torch.version.cuda is not None"           # [cuda_compiler_version != "None"]
-        - python -c "import glob, os, sys, torch; print('torch.__version__=', torch.__version__); print('torch.__file__=', getattr(torch, '__file__', None)); torch_dir = os.path.dirname(getattr(torch, '__file__', '')) if getattr(torch, '__file__', None) else ''; print('torch.version.hip=', torch.version.hip); print('torch.version.cuda=', torch.version.cuda); print('torch.backends.cuda.is_built()=', torch.backends.cuda.is_built()); print('torch.cuda.is_available()=', torch.cuda.is_available()); print('sys.executable=', sys.executable); print('ROCM_PATH=', os.environ.get('ROCM_PATH')); print('LD_LIBRARY_PATH=', os.environ.get('LD_LIBRARY_PATH')); prefix = os.environ.get('PREFIX', ''); print('libamdhip64 candidates=', glob.glob(os.path.join(prefix, 'lib', 'libamdhip64.so*')) if prefix else []); print('torch HIP libs in package=', sorted([p for p in glob.glob(os.path.join(torch_dir, 'lib', '*')) if 'hip' in os.path.basename(p).lower() or 'roc' in os.path.basename(p).lower()]))"   # [hip_compiler_version != "None"]
         - python -c "import torch; assert torch.version.hip is not None, f'torch.version.hip={torch.version.hip!r}'"            # [hip_compiler_version != "None"]
         # At conda-forge, we target versions of OSX that are too old for MPS support
         # But if users install a newer version of OSX, they will have MPS support
@@ -545,36 +544,36 @@ outputs:
         # https://github.com/conda-forge/pytorch-cpu-feedstock/pull/318#issuecomment-2620080859
         {% set skips = skips ~ " or test_mutable_custom_op_fixed_layout" %}
         # trivial accuracy problems
-        {% set skips = skips ~ " or test_BCELoss_weights_no_reduce_cuda" %}             # [linux and cuda_compiler_version != "None"]
-        {% set skips = skips ~ " or test_ctc_loss_cudnn_tensor_cuda" %}                 # [linux and cuda_compiler_version != "None"]
-        {% set skips = skips ~ " or (TestTorch and test_index_add_correctness)" %}      # [linux and cuda_compiler_version != "None"]
+        {% set skips = skips ~ " or test_BCELoss_weights_no_reduce_cuda" %}             # [linux and (cuda_compiler_version != "None" or hip_compiler_version != "None")]
+        {% set skips = skips ~ " or test_ctc_loss_cudnn_tensor_cuda" %}                 # [linux and (cuda_compiler_version != "None" or hip_compiler_version != "None")]
+        {% set skips = skips ~ " or (TestTorch and test_index_add_correctness)" %}      # [linux and (cuda_compiler_version != "None" or hip_compiler_version != "None")]
         # These tests require higher-resource or more recent GPUs than the CI provides
-        {% set skips = skips ~ " or test_sdpa_inference_mode_aot_compile" %}            # [linux and cuda_compiler_version != "None"]
-        {% set skips = skips ~ " or (TestNN and test_grid_sample)" %}                   # [linux and cuda_compiler_version != "None"]
+        {% set skips = skips ~ " or test_sdpa_inference_mode_aot_compile" %}            # [linux and (cuda_compiler_version != "None" or hip_compiler_version != "None")]
+        {% set skips = skips ~ " or (TestNN and test_grid_sample)" %}                   # [linux and (cuda_compiler_version != "None" or hip_compiler_version != "None")]
         # don't mess with tests that rely on GPU failure handling
-        {% set skips = skips ~ " or test_cublas_config_nondeterministic_alert_cuda" %}  # [linux and cuda_compiler_version != "None"]
-        {% set skips = skips ~ " or test_cross_entropy_loss_2d_out_of_bounds_class" %}  # [linux and cuda_compiler_version != "None"]
-        {% set skips = skips ~ " or test_indirect_device_assert" %}                     # [linux and cuda_compiler_version != "None"]
-        {% set skips = skips ~ " or test_reentrant_parent_error_on_cpu_cuda" %}         # [linux and cuda_compiler_version != "None"]
+        {% set skips = skips ~ " or test_cublas_config_nondeterministic_alert_cuda" %}  # [linux and (cuda_compiler_version != "None" or hip_compiler_version != "None")]
+        {% set skips = skips ~ " or test_cross_entropy_loss_2d_out_of_bounds_class" %}  # [linux and (cuda_compiler_version != "None" or hip_compiler_version != "None")]
+        {% set skips = skips ~ " or test_indirect_device_assert" %}                     # [linux and (cuda_compiler_version != "None" or hip_compiler_version != "None")]
+        {% set skips = skips ~ " or test_reentrant_parent_error_on_cpu_cuda" %}         # [linux and (cuda_compiler_version != "None" or hip_compiler_version != "None")]
         # test that fails to find temporary resource
-        {% set skips = skips ~ " or (GPUTests and test_scatter_reduce2)" %}             # [linux and cuda_compiler_version != "None"]
+        {% set skips = skips ~ " or (GPUTests and test_scatter_reduce2)" %}             # [linux and (cuda_compiler_version != "None" or hip_compiler_version != "None")]
         # ROCM test whose skip doesn't trigger
-        {% set skips = skips ~ " or test_ck_blas_library_cpu" %}                        # [linux and cuda_compiler_version != "None"]
+        {% set skips = skips ~ " or test_ck_blas_library_cpu" %}                        # [linux and (cuda_compiler_version != "None" or hip_compiler_version != "None")]
         # problem with finding output of `torch.cuda.tunable.write_file()`
-        {% set skips = skips ~ " or test_matmul_offline_tunableop_cuda_float16" %}      # [linux and cuda_compiler_version != "None"]
+        {% set skips = skips ~ " or test_matmul_offline_tunableop_cuda_float16" %}      # [linux and (cuda_compiler_version != "None" or hip_compiler_version != "None")]
         # catastropic accuracy failure in convolution
-        {% set skips = skips ~ " or test_Conv3d_1x1x1_no_bias_cuda" %}                  # [linux and cuda_compiler_version != "None"]
+        {% set skips = skips ~ " or test_Conv3d_1x1x1_no_bias_cuda" %}                  # [linux and (cuda_compiler_version != "None" or hip_compiler_version != "None")]
         # some triton errors that appeared in #391
-        {% set skips = skips ~ " or test_isinf_cuda" %}                                 # [linux and cuda_compiler_version != "None"]
-        {% set skips = skips ~ " or test_donated_buffer_inplace_gpt" %}                 # [linux and cuda_compiler_version != "None"]
-        {% set skips = skips ~ " or test_linear_dynamic_maxautotune_cuda" %}            # [linux and cuda_compiler_version != "None"]
+        {% set skips = skips ~ " or test_isinf_cuda" %}                                 # [linux and (cuda_compiler_version != "None" or hip_compiler_version != "None")]
+        {% set skips = skips ~ " or test_donated_buffer_inplace_gpt" %}                 # [linux and (cuda_compiler_version != "None" or hip_compiler_version != "None")]
+        {% set skips = skips ~ " or test_linear_dynamic_maxautotune_cuda" %}            # [linux and (cuda_compiler_version != "None" or hip_compiler_version != "None")]
         # skip some very long-running groups of tests (~30 minutes total)
-        {% set skips = skips ~ " or (test_gradgrad_nn_Transformer and _cuda_)" %}       # [linux and cuda_compiler_version != "None"]
-        {% set skips = skips ~ " or test_avg_pool3d_backward2" %}                       # [linux and cuda_compiler_version != "None"]
+        {% set skips = skips ~ " or (test_gradgrad_nn_Transformer and _cuda_)" %}       # [linux and (cuda_compiler_version != "None" or hip_compiler_version != "None")]
+        {% set skips = skips ~ " or test_avg_pool3d_backward2" %}                       # [linux and (cuda_compiler_version != "None" or hip_compiler_version != "None")]
         # MKL problems
-        {% set skips = skips ~ " or (TestLinalgCPU and test_inverse_errors_large_cpu)" %}   # [linux and blas_impl == "mkl" and cuda_compiler_version != "None"]
+        {% set skips = skips ~ " or (TestLinalgCPU and test_inverse_errors_large_cpu)" %}   # [linux and blas_impl == "mkl" and (cuda_compiler_version != "None" or hip_compiler_version != "None")]
         # non-MKL problems
-        {% set skips = skips ~ " or test_gather_scatter_cpu or test_index_put2_cpu" %}      # [linux and blas_impl != "mkl" and cuda_compiler_version != "None"]
+        {% set skips = skips ~ " or test_gather_scatter_cpu or test_index_put2_cpu" %}      # [linux and blas_impl != "mkl" and (cuda_compiler_version != "None" or hip_compiler_version != "None")]
         # these tests are failing with low -n values
         {% set skips = skips ~ " or test_base_does_not_require_grad_mode_nothing" %}    # [not win]
         {% set skips = skips ~ " or test_base_does_not_require_grad_mode_warn" %}       # [not win]
@@ -594,13 +593,15 @@ outputs:
         {% set skips = skips ~ " or test_cpp_warnings_have_python_context_cuda" %}
         # "Attempt to trace generator"
         {% set skips = skips ~ " or test_lite_regional_compile_flex_attention_cuda" %}
+        # rock-the-conda specific: we run tests on gfx1151, and "_convert_weight_to_int4pack_cuda is only supported on AMD gpu arch greater than or equal to CDNA2"
+        {% set skips = skips ~ " or test__int4_mm" %}                                    # [linux and hip_compiler_version != "None"]
 
         # the whole test suite takes forever, but we should get a good enough coverage
         # for potential packaging problems by running a fixed subset
         - export OMP_NUM_THREADS=4  # [unix]
-        # reduced paralellism to avoid OOM for CUDA builds
+        # reduced paralellism to avoid OOM for CUDA and HIP/ROCm builds
         {% set jobs = "-n 2" %}
-        {% set jobs = "-n 1" %}     # [linux64 and cuda_compiler_version != "None"]
+        {% set jobs = "-n 1" %}     # [linux64 and (cuda_compiler_version != "None" or hip_compiler_version != "None")]
         # test only one python version on aarch because emulation is super-slow;
         # disable hypothesis because it randomly yields health check errors
 
