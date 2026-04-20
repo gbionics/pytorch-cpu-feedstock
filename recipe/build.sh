@@ -214,6 +214,9 @@ elif [[ ${hip_compiler_version} != "None" ]]; then
     # roctracer headers are in a subdirectory but kineto includes them without prefix
     export CXXFLAGS="$CXXFLAGS -isystem ${PREFIX}/include/roctracer"
 
+    # when using hip with gcc, for some reason it fails with "hip/hip_runtime_api.h: No such file or directory"
+    export CXXFLAGS="$CXXFLAGS -isystem ${BUILD_PREFIX}/include"
+
     # Hipify: convert CUDA sources to HIP before building
     $PREFIX/bin/python tools/amd_build/build_amd.py
 elif [[ ${cuda_compiler_version} != "None" ]]; then
