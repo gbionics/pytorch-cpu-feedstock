@@ -204,6 +204,8 @@ requirements:
   run:
     - libblas * *{{ blas_impl }}        # [blas_impl == "mkl"]
     - libmagma * rocm*                  # [hip_compiler_version != "None"]
+    # Workaround to avoid zlib not found CMake error
+    - zlib                              # [hip_compiler_version != "None"]
   run_constrained:
     # https://github.com/conda-forge/pytorch-cpu-feedstock/issues/65
     - pytorch-cpu {{ version }}    # [cuda_compiler_version == "None" and hip_compiler_version == "None"]
