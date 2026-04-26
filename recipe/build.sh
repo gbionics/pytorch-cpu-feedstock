@@ -105,6 +105,11 @@ export Python_ROOT_DIR=$PREFIX
 # (this matches the behavior to our patches)
 export PYTORCH_BLAS_USE_CBLAS_DOT=ON
 
+# Use sccache
+export CMAKE_C_COMPILER_LAUNCHER=sccache
+export CMAKE_CXX_COMPILER_LAUNCHER=sccache
+export CMAKE_HIP_COMPILER_LAUNCHER=sccache
+
 # workaround to stop setup.py from trying to check whether we checked out
 # all submodules (we don't use all of them)
 rm -f .gitmodules
