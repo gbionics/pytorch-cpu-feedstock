@@ -127,7 +127,7 @@ requirements:
     - libprotobuf
     - protobuf
     - make      # [linux]
-    - sccache   # [win]
+    - sccache
     - grep      # [unix]
     - rsync     # [unix]
   host:
