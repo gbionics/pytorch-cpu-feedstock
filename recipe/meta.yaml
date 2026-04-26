@@ -234,6 +234,7 @@ test:
     - {{ compiler('hip') }}     # [hip_compiler_version != "None"]
     # Workaround, this should go in a libtorch-devel or similar package
     - hipblas-common            # [hip_compiler_version != "None"]
+    - rocprim                   # [hip_compiler_version != "None"]
     - cuda-nvrtc-dev            # [cuda_compiler_version != "None"]
     - nvtx-c                    # [cuda_compiler_version != "None"]
     - cmake
@@ -436,6 +437,7 @@ outputs:
         - {{ compiler('hip') }}        # [hip_compiler_version != "None"]
         # Workaround, this should go in a libtorch-devel or similar package
         - hipblas-common            # [hip_compiler_version != "None"]
+        - rocprim                   # [hip_compiler_version != "None"]
         - ninja
         - boto3
         - hypothesis
