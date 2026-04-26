@@ -232,6 +232,8 @@ test:
     # for CMake config to find cuda & nvrtc
     - {{ compiler('cuda') }}    # [cuda_compiler_version != "None"]
     - {{ compiler('hip') }}     # [hip_compiler_version != "None"]
+    # Workaround, this should go in a libtorch-devel or similar package
+    - hipblas-common            # [hip_compiler_version != "None"]
     - cuda-nvrtc-dev            # [cuda_compiler_version != "None"]
     - nvtx-c                    # [cuda_compiler_version != "None"]
     - cmake
@@ -432,6 +434,8 @@ outputs:
         # for torch.compile tests
         - {{ compiler('cuda') }}       # [cuda_compiler_version != "None"]
         - {{ compiler('hip') }}        # [hip_compiler_version != "None"]
+        # Workaround, this should go in a libtorch-devel or similar package
+        - hipblas-common            # [hip_compiler_version != "None"]
         - ninja
         - boto3
         - hypothesis
