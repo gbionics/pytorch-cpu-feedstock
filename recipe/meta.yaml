@@ -61,8 +61,6 @@ source:
       - patches/0018-Allow-gcc-14-with-CUDA-12.8-173366.patch
       # ROCm-specific patches are kept in a 0100+ namespace so they can be merged independently.
       - patches/0100-Fix-FindHIP-for-conda-cross-compilation-toolchains.patch          # [hip_compiler_version != "None"]
-      # backport https://github.com/pytorch/pytorch/pull/170697 and https://github.com/pytorch/pytorch/pull/171180
-      - patches/0103-Backport-ROCm-fix-HIP-flags-for-cpython_defs.c-build.patch
       - patches_submodules/tensorpipe/0001-switch-away-from-find_package-CUDA.patch
 
 build:
