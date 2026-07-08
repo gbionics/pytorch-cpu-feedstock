@@ -1,6 +1,6 @@
-# if you wish to build release candidate number X, append the version string with ".rcX"
-{% set version = "2.10.0" %}
-{% set build = 4 %}
+# if you wish to build release candidate number X, append the version string with "-rcX"
+{% set version = "2.11.0" %}
+{% set build = 2 %}
 
 # Use a higher build number for the GPU variants, to ensure that it's
 # preferred by conda's solver, and it's preferentially
@@ -25,11 +25,11 @@ package:
 source:
 {% if "rc" in version %}
   - url: https://download.pytorch.org/source_code/test/pytorch-v{{ version }}.tar.gz
-    sha256: f35b2d7839b284410e5be9ec2eeb7a3049e09c1b8f6a871d3f2cad495d93dcd6
+    sha256: 3035931fff5b79e0300db69b0249e0c9c7ea5b394f451cb80e0280cbc2affcc2
 {% else %}
   # The "pytorch-v" tarballs contain submodules; the "pytorch-" ones don't.
   - url: https://github.com/pytorch/pytorch/releases/download/v{{ version }}/pytorch-v{{ version }}.tar.gz
-    sha256: fa8ccbe87f83f48735505371c1c313b4aa6db400b0ae4f8a02844d1e150c695f
+    sha256: ab3fde9e7e382f45ac942be6ea2c2ef362c5ccd6f55ed6d5f35e6ea81d3ab88e
 {% endif %}
     patches:
       - patches/0001-Force-usage-of-python-3-and-error-without-numpy.patch
@@ -50,18 +50,22 @@ source:
       # backport https://github.com/pytorch/pytorch/pull/166824
       - patches/0011-Add-USE_SYSTEM-options-for-KLEIDI-CUDNN_FRONTEND-CUT.patch
       - patches/0012-Fix-building-kineto-against-system-fmt.patch
-      # backport https://github.com/pytorch/pytorch/pull/159828
-      - patches/0013-Attempt-to-fix-torch.backends.cudnn.rnn-import.patch
-      - patches/0014-Use-Intel-LLVM-openmp.patch
-      # backport https://github.com/pytorch/pytorch/pull/174647
-      - patches/0015-Fix-ICE-in-GCC-14-with-arm.patch
-      - patches/0016-for-win-CUDA-remove-USE_CUDA-guard-for-skip-in-compi.patch         # [cuda_compiler_version != "None"]
-      - patches/0017-Fix-FindHIP-for-conda-cross-compilation-toolchains.patch          # [hip_compiler_version != "None"]
+      - patches/0013-Use-Intel-LLVM-openmp.patch
+      - patches/0014-for-win-CUDA-remove-USE_CUDA-guard-for-skip-in-compi.patch         # [cuda_compiler_version != "None"]
+      # backport https://github.com/pytorch/pytorch/pull/180388
+      - patches/0015-Fix-build-with-MAGMA-2.10.0-180388.patch
+      # backport https://github.com/pytorch/pytorch/pull/175283
+      - patches/0016-Ensure-test_tensorinv-uses-well-conditioned-inputs-1.patch
+      - patches/0017-Declare-_tryToInferTypeImpl-with-TORCH_PYTHON_API.patch
+      # backport https://github.com/pytorch/pytorch/pull/173366
+      - patches/0018-Allow-gcc-14-with-CUDA-12.8-173366.patch
+      # ROCm-specific patches are kept in a 0100+ namespace so they can be merged independently.
+      - patches/0100-Fix-FindHIP-for-conda-cross-compilation-toolchains.patch          # [hip_compiler_version != "None"]
       # backport https://github.com/pytorch/pytorch/pull/174105 (adapted for v2.10 test decorators)
-      - patches/0018-Backport-ROCm-Bump-AOTriton-to-0.11.2b.patch                       # [hip_compiler_version != "None"]
-      - patches/0019-Fix-AT_MAGMA_VERSION-encoding-for-MAGMA-2.10.patch
+      - patches/0101-Backport-ROCm-Bump-AOTriton-to-0.11.2b.patch                       # [hip_compiler_version != "None"]
+      - patches/0102-Fix-AT_MAGMA_VERSION-encoding-for-MAGMA-2.10.patch
       # backport https://github.com/pytorch/pytorch/pull/170697 and https://github.com/pytorch/pytorch/pull/171180
-      - patches/0020-Backport-ROCm-fix-HIP-flags-for-cpython_defs.c-build.patch
+      - patches/0103-Backport-ROCm-fix-HIP-flags-for-cpython_defs.c-build.patch
       - patches_submodules/tensorpipe/0001-switch-away-from-find_package-CUDA.patch
 
 build:
@@ -78,14 +82,6 @@ build:
 {% else %}
   skip: true  # [is_rc]
 {% endif %}
-  # CUDA builds on GPU agents, non-CUDA builds on CPU agents; c.f.
-  # https://github.com/conda-forge/conda-smithy/pull/2434; the skip could be avoided
-  # using https://github.com/conda-forge/conda-forge-pinning-feedstock/pull/6910
-  # (plus a mechanism similar to CF_CUDA_ENABLED, preliminarily called CF_SELF_HOSTED).
-  # condition needs to be on a single line for conda-build to catch used variables
-  {% if (cuda_compiler_version == "None" and "gpu" in github_actions_labels) or (cuda_compiler_version != "None" and "cpu" in github_actions_labels) %}
-  skip: true
-  {% endif %}
   string: cuda{{ cuda_compiler_version | replace('.', '') }}_{{ blas_impl }}_h{{ PKG_HASH }}_{{ build }}  # [cuda_compiler_version != "None"]
   string: rocm{{ hip_compiler_version | replace('.', '') }}_{{ blas_impl }}_h{{ PKG_HASH }}_{{ build }}  # [hip_compiler_version != "None"]
   string: cpu_{{ blas_impl }}_h{{ PKG_HASH }}_{{ build }}                                                 # [cuda_compiler_version == "None" and hip_compiler_version == "None"]
@@ -144,7 +140,8 @@ requirements:
     - cusparselt
     - libcublas-dev
     - libcudnn-dev
-    - libcudss-dev
+    # https://github.com/conda-forge/pytorch-cpu-feedstock/pull/490#issuecomment-4603758942
+    - libcudss-dev <0.8
     - libcufile-dev         # [linux]
     - libcufft-dev
     - libcurand-dev
@@ -152,6 +149,7 @@ requirements:
     - libcusparse-dev
     - libmagma-devel
     - nccl                  # [linux]
+    - nccl <2.29            # [linux and cuda_compiler_version=="12.9" and arm_variant_type!="tegra"]
     - nvtx-c
     {% elif hip_compiler_version != "None" %}
     - rocm-core {{ hip_compiler_version }}
@@ -177,7 +175,7 @@ requirements:
     - python 3.12
     - numpy *
     - pip
-    - setuptools
+    - setuptools <82
     - pyyaml
     - requests
     - six
@@ -208,10 +206,13 @@ requirements:
     - zlib                              # [hip_compiler_version != "None"]
   run_constrained:
     # https://github.com/conda-forge/pytorch-cpu-feedstock/issues/65
-    - pytorch-cpu {{ version }}    # [cuda_compiler_version == "None" and hip_compiler_version == "None"]
-    - pytorch-gpu <0.0a0           # [cuda_compiler_version == "None" and hip_compiler_version == "None"]
-    - pytorch-gpu {{ version }}    # [cuda_compiler_version != "None" or hip_compiler_version != "None"]
-    - pytorch-cpu <0.0a0           # [cuda_compiler_version != "None" or hip_compiler_version != "None"]
+    {% if cuda_compiler_version == "None" and hip_compiler_version == "None" %}
+    - pytorch-cpu {{ version }}
+    - pytorch-gpu <0.0a0
+    {% else %}
+    - pytorch-gpu {{ version }}
+    - pytorch-cpu <0.0a0
+    {% endif %}
     - pytorch {{ version }} cuda{{ cuda_compiler_version | replace('.', '') }}_{{ blas_impl }}_*_{{ build }}  # [cuda_compiler_version != "None"]
     - pytorch {{ version }} rocm{{ hip_compiler_version | replace('.', '') }}_{{ blas_impl }}_*_{{ build }}  # [hip_compiler_version != "None"]
     - pytorch {{ version }} cpu_{{ blas_impl }}_*_{{ build }}                                                 # [cuda_compiler_version == "None" and hip_compiler_version == "None"]
@@ -325,7 +326,8 @@ outputs:
         - cusparselt
         - libcublas-dev
         - libcudnn-dev
-        - libcudss-dev
+        # https://github.com/conda-forge/pytorch-cpu-feedstock/pull/490#issuecomment-4603758942
+        - libcudss-dev <0.8
         - libcufile-dev         # [linux]
         - libcufft-dev
         - libcurand-dev
@@ -333,6 +335,7 @@ outputs:
         - libcusparse-dev
         - libmagma-devel
         - nccl                  # [linux]
+        - nccl <2.29            # [linux and cuda_compiler_version=="12.9" and arm_variant_type!="tegra"]
         - nvtx-c
         {% elif hip_compiler_version != "None" %}
         - rocm-core {{ hip_compiler_version }}
@@ -357,7 +360,7 @@ outputs:
         - python
         - numpy
         - pip
-        - setuptools
+        - setuptools <82
         - pyyaml
         - requests
         - six
@@ -400,17 +403,22 @@ outputs:
         - pybind11
         # https://github.com/pytorch/pytorch/pull/175115
         - pybind11 <3.0.2
-        - setuptools
+        - setuptools <82
         - sympy >=1.13.3
         - typing_extensions >=4.10.0
-        # see https://github.com/conda-forge/sympy-feedstock/issues/67
-        - mpmath <1.4
       run_constrained:
         # https://github.com/conda-forge/pytorch-cpu-feedstock/issues/65
-        - pytorch-cpu {{ version }}    # [cuda_compiler_version == "None" and hip_compiler_version == "None"]
-        - pytorch-gpu <0.0a0           # [cuda_compiler_version == "None" and hip_compiler_version == "None"]
-        - pytorch-gpu {{ version }}    # [cuda_compiler_version != "None" or hip_compiler_version != "None"]
-        - pytorch-cpu <0.0a0           # [cuda_compiler_version != "None" or hip_compiler_version != "None"]
+        {% if cuda_compiler_version == "None" and hip_compiler_version == "None" %}
+        - pytorch-cpu {{ version }}
+        - pytorch-gpu <0.0a0
+        {% else %}
+        - pytorch-gpu {{ version }}
+        - pytorch-cpu <0.0a0
+        {% endif %}
+    test:
+      imports:
+        - torch
+        - torch._C
 
   - name: pytorch-tests
     build:
@@ -464,9 +472,6 @@ outputs:
         - nvtx-c                    # [cuda_compiler_version != "None"]
         # not required upstream, but useful
         - pytest-timeout
-      imports:
-        - torch
-        - torch._C
       files:
         - cmake_test/
       source_files:
@@ -486,15 +491,12 @@ outputs:
         - python -c "import numpy as np;import torch;x = torch.tensor([2], dtype=torch.complex128);res = torch.dot(x, x); assert res.real == 4.0, res"
         # distributed support is enabled by default on linux; for mac, we enable it manually in build.sh
         - python -c "import torch; assert torch.distributed.is_available()"         # [linux or osx]
+        - python -c "import torch; assert torch.backends.mps.is_available()"        # [osx]
         - python -c "import torch; assert torch.backends.cuda.is_built()"           # [cuda_compiler_version != "None"]
         - python -c "import torch; assert torch.backends.cudnn.is_available()"      # [cuda_compiler_version != "None"]
         - python -c "import torch; assert torch.backends.cudnn.enabled"             # [cuda_compiler_version != "None"]
         - python -c "import torch; assert torch.version.cuda is not None"           # [cuda_compiler_version != "None"]
         - python -c "import torch; assert torch.version.hip is not None, f'torch.version.hip={torch.version.hip!r}'"            # [hip_compiler_version != "None"]
-        # At conda-forge, we target versions of OSX that are too old for MPS support
-        # But if users install a newer version of OSX, they will have MPS support
-        # https://github.com/conda-forge/pytorch-cpu-feedstock/pull/123#issuecomment-1186355073
-        # - python -c "import torch; assert torch.backends.mps.is_available()" # [osx]
 
         # python-version-specific library (default location in SP_DIR symlinks back to this)
         - test -f $PREFIX/lib/libtorch_python${SHLIB_EXT}           # [unix]
@@ -502,7 +504,8 @@ outputs:
         - if not exist %SP_DIR%\torch\lib\torch_python.lib exit 1   # [win]
         - if not exist %SP_DIR%\torch\lib\_C.lib exit 1             # [win]
 
-        # a reasonably safe subset of tests that should run under 15 minutes
+        # the whole test suite takes forever, but we should get a good enough coverage
+        # for potential packaging problems by running a fixed subset
         {% set tests = " ".join([
             "test/test_autograd.py",
             "test/test_autograd_fallback.py",
@@ -523,6 +526,34 @@ outputs:
         {% set skips = skips ~ " or test_1_sized_with_0_strided_cpu_float32" %}         # [osx]
         {% set skips = skips ~ " or test_batchnorm_nhwc_cpu" %}                         # [unix]
         {% set skips = skips ~ " or test_layer_norm_backwards_eps" %}                   # [unix]
+        # onednn errors ("unsupported {isa, datatype, datatype combination, sparse md configuration}")
+        {% set skips = skips ~ " or test__int4_mm_m" %}                                 # [aarch64]
+        {% set skips = skips ~ " or test_lstm_cpu" %}                                   # [aarch64]
+        {% set skips = skips ~ " or test_remove_no_ops_cpu" %}                          # [aarch64]
+        {% set skips = skips ~ " or test_weight_norm_bwd_cpu" %}                        # [aarch64]
+        # ... for float16
+        {% set skips = skips ~ " or (_cpu_float16 and (dummy_for_consistency_below"%}   # [aarch64]
+            {% set skips = skips ~ " or test_activations_bfloat16_half_cpu" %}          # [aarch64]
+            {% set skips = skips ~ " or test_addbmm" %}                                 # [aarch64]
+            {% set skips = skips ~ " or test_addmm" %}                                  # [aarch64]
+            {% set skips = skips ~ " or test_addmv" %}                                  # [aarch64]
+            {% set skips = skips ~ " or test_baddbmm" %}                                # [aarch64]
+            {% set skips = skips ~ " or test_bmm" %}                                    # [aarch64]
+            {% set skips = skips ~ " or test_conv_deconv" %}                            # [aarch64]
+            {% set skips = skips ~ " or test_conv_nhwc_lower_precision" %}              # [aarch64]
+            {% set skips = skips ~ " or test_conv_transpose_nhwc_lower_precision" %}    # [aarch64]
+            {% set skips = skips ~ " or test_dot_vs_numpy" %}                           # [aarch64]
+            {% set skips = skips ~ " or test_grouped_mm_cpu_unaligned" %}               # [aarch64]
+            {% set skips = skips ~ " or test_linear_lowp" %}                            # [aarch64]
+            {% set skips = skips ~ " or test_matmul_lower_precision" %}                 # [aarch64]
+        # ... for complex32
+        {% set skips = skips ~ ")) or (_cpu_complex32 and (dummy_for_consistency_below"%}  # [aarch64]
+            {% set skips = skips ~ " or test_forward_nn_ConvTranspose" %}               # [aarch64]
+            {% set skips = skips ~ " or test_if_train_and_eval_modes_differ_nn_ConvTr" %}  # [aarch64]
+            {% set skips = skips ~ " or test_memory_format_nn_ConvTranspose1d" %}       # [aarch64]
+            {% set skips = skips ~ " or test_non_contiguous_tensors_nn_ConvTranspo" %}  # [aarch64]
+            {% set skips = skips ~ " or test_save_load_nn_ConvTranspose" %}             # [aarch64]
+        {% set skips = skips ~ "))"%}                                                   # [aarch64]
         # timeouts and failures on aarch, see https://github.com/conda-forge/pytorch-cpu-feedstock/pull/298#issuecomment-2555888508
         {% set skips = skips ~ " or test_pynode_destruction_deadlock" %}                # [aarch64]
         {% set skips = skips ~ " or (TestLinalgCPU and test_cholesky_cpu_float32)" %}   # [aarch64]
@@ -535,8 +566,6 @@ outputs:
         {% set skips = skips ~ " or test_grad_nn_Transformer" %}                        # [aarch64]
         {% set skips = skips ~ " or test_inverse_errors_large" %}                       # [aarch64]
         {% set skips = skips ~ " or (TestXNNPACKConv1dTransformPass and test_conv1d_basic)" %}  # [aarch64]
-        # errors (possibly QEMU-related) with openblas 0.3.30
-        {% set skips = skips ~ " or test_addbmm or test_baddbmm or test_bmm" %}         # [aarch64]
         # doesn't crash, but gets different result on aarch + CUDA
         {% set skips = skips ~ " or illcondition_matrix_input_should_not_crash_cpu" %}  # [aarch64 and cuda_compiler_version != "None"]
         # may crash spuriously
@@ -547,6 +576,7 @@ outputs:
         {% set skips = skips ~ " or test_mutable_custom_op_fixed_layout" %}             # [not win]
         # minor inaccuracy on aarch64 (emulation?)
         {% set skips = skips ~ " or (TestNN and test_upsampling_bfloat16)" %}           # [aarch64]
+        {% set skips = skips ~ " or (TestLinalgCPU and test_qr_cpu_float32)" %}         # [aarch64]
         # flaky failure: `Exec format error: '$PREFIX/bin/python3.12'`
         {% set skips = skips ~ " or test_terminate_handler_on_crash" %}                 # [aarch64]
         # may crash spuriously
@@ -600,6 +630,23 @@ outputs:
         {% set skips = skips ~ " or test_qengine" %}                                    # [osx and arm64]
         # flaky failure on osx
         {% set skips = skips ~ " or test_LayerNorm_numeric_mps" %}                      # [osx and arm64]
+        # precision errors
+        {% set skips = skips ~ " or test_forward_nn_Linear" %}                          # [osx and arm64]
+        {% set skips = skips ~ " or test_forward_nn_TransformerEncoderLayer_train_mode_mps_float16" %}  # [osx and arm64]
+        {% set skips = skips ~ " or test_non_contiguous_tensors_nn_GRUCell_mps" %}      # [osx and arm64]
+        {% set skips = skips ~ " or test_non_contiguous_tensors_nn_GRU_eval_mode_mps" %}  # [osx and arm64]
+        {% set skips = skips ~ " or test_non_contiguous_tensors_nn_GRU_train_mode_mps" %}  # [osx and arm64]
+        {% set skips = skips ~ " or test_non_contiguous_tensors_nn_LSTMCell_mps" %}     # [osx and arm64]
+        {% set skips = skips ~ " or test_non_contiguous_tensors_nn_Linear_mps" %}       # [osx and arm64]
+        {% set skips = skips ~ " or test_non_contiguous_tensors_nn_MultiheadAttention_eval_mode_mps_float16" %}  # [osx and arm64]
+        {% set skips = skips ~ " or test_non_contiguous_tensors_nn_MultiheadAttention_train_mode_mps_float16" %}  # [osx and arm64]
+        {% set skips = skips ~ " or test_non_contiguous_tensors_nn_RNNCell_mps" %}      # [osx and arm64]
+        {% set skips = skips ~ " or test_non_contiguous_tensors_nn_RNN_eval_mode_mps" %}  # [osx and arm64]
+        {% set skips = skips ~ " or test_non_contiguous_tensors_nn_RNN_train_mode_mps" %}  # [osx and arm64]
+        {% set skips = skips ~ " or test_transformerencoderlayer_mps_float32" %}        # [osx and arm64]
+        {% set skips = skips ~ " or test_transformerencoderlayer_gelu_mps_float32" %}   # [osx and arm64]
+        {% set skips = skips ~ " or test_grad_nn_MultiheadAttention_eval_mode_cpu_float64" %}   # [osx and arm64]
+        {% set skips = skips ~ " or test_non_contiguous_tensors_nn_CrossEntropyLoss_mps_float32" %}   # [osx and arm64]
         # some warning-related failure, maybe it's broken by --disable-warnings?
         {% set skips = skips ~ " or test_cpp_warnings_have_python_context_cpu" %}
         {% set skips = skips ~ " or test_cpp_warnings_have_python_context_cuda" %}
@@ -612,6 +659,18 @@ outputs:
         # for potential packaging problems by running a fixed subset
         - export OMP_NUM_THREADS=4  # [unix]
         # reduced paralellism to avoid OOM for CUDA and HIP/ROCm builds
+        # Regressions in 2.11.0
+        {% set skips = skips ~ " or test_compile_dyn_quant_matmul_4bit" %}               # [win and cuda_compiler_version == "13.0"]
+        {% set skips = skips ~ " or test__int8_mm_m" %}                                  # [win and cuda_compiler_version == "13.0"]
+        {% set skips = skips ~ " or test_pdist_cuda_gradgrad_unimplemented" %}           # [win and cuda_compiler_version == "13.0"]
+        {% set skips = skips ~ " or test_inverse_errors_large_cpu" %}                    # [win and cuda_compiler_version == "13.0"]
+        {% set skips = skips ~ " or test_torchinductor" %}                               # [win and cuda_compiler_version == "13.0"]
+        {% set skips = skips ~ " or test_eigh_svd_illcondition_matrix_input_should_not_crash_cpu_float32" %}  # [aarch64]
+
+        - export OMP_NUM_THREADS=4      # [unix]
+        - export ONEDNN_VERBOSE=all     # [unix]
+        - set ONEDNN_VERBOSE=all        # [win]
+        # reduced paralellism to avoid OOM for CUDA builds
         {% set jobs = "-n 2" %}
         {% set jobs = "-n 1" %}     # [linux64 and (cuda_compiler_version != "None" or hip_compiler_version != "None")]
         # test only one python version on aarch because emulation is super-slow;
@@ -624,10 +683,10 @@ outputs:
         # {% endif %}
 
         # regression test for https://github.com/conda-forge/pytorch-cpu-feedstock/issues/329, where we picked up
-        # duplicate `.pyc` files due to newest py-ver (3.13) in the build environment not matching the one in host;
+        # duplicate `.pyc` files due to newest py-ver (3.14) in the build environment not matching the one in host;
         # obviously this test can only be done for other python versions.
-        - test ! -f $SP_DIR/functorch/__pycache__/__init__.cpython-313.pyc          # [py!=313 and unix]
-        - if exist %SP_DIR%\functorch\__pycache__\__init__.cpython-313.pyc exit 1   # [py!=313 and win]
+        - test ! -f $SP_DIR/functorch/__pycache__/__init__.cpython-314.pyc          # [py!=314 and unix]
+        - if exist %SP_DIR%\functorch\__pycache__\__init__.cpython-314.pyc exit 1   # [py!=314 and win]
 
         # test integrity of CMake metadata and ensure that THPLayoutType is visible as a symbol from libtorch_python
         - export ROCM_PATH=${PREFIX}

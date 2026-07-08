@@ -21,25 +21,25 @@ github_actions_labels:
 is_rc:
 - 'False'
 libabseil:
-- '20260107'
+- '20260526'
 libcudnn_dev:
 - '9'
 libmagma_devel:
-- '2.9'
+- 2.10.0
 libmagma_sparse:
-- '2.9'
+- 2.10.0
 libprotobuf:
-- 6.33.5
+- 7.35.1
 libtorch:
-- '2.9'
+- '2.10'
 mkl:
-- '2025'
+- '2026'
 mkl_devel:
-- '2025'
+- '2026'
 numpy:
 - '2'
 orc:
-- 2.2.2
+- 2.3.0
 pin_run_as_build:
   python:
     min_pin: x.x
@@ -53,7 +53,7 @@ python:
 - 3.13.* *_cp313
 - 3.14.* *_cp314
 pytorch:
-- '2.9'
+- '2.10'
 target_platform:
 - win-64
 zip_keys:
