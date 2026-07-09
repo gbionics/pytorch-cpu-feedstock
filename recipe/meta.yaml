@@ -121,6 +121,8 @@ requirements:
     - sccache
     - grep      # [unix]
     - rsync     # [unix]
+    # Workaround for https://github.com/gbionics/rock-the-conda/pull/50#issuecomment-4917284822
+    - libllvm22 22.1.8 *_2
   host:
     # GPU requirements
     {% if cuda_compiler_version != "None" %}
