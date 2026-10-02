@@ -1,6 +1,6 @@
 # if you wish to build release candidate number X, append the version string with "-rcX"
 {% set version = "2.11.0" %}
-{% set build = 2 %}
+{% set build = 3 %}
 
 # Use a higher build number for the GPU variants, to ensure that it's
 # preferred by conda's solver, and it's preferentially
@@ -66,7 +66,7 @@ source:
 build:
   number: {{ build }}
   script_env:
-    - ROCK_THE_CONDA_ROCM_GPU_TARGETS
+    - CONDA_FORGE_DEFAULT_ROCM_GPU_TARGETS
   # Only build hip variant for now
   skip: true  # [hip_compiler_version == "None"]
   # This logic allows two rc variants to be defined in the conda_build_config, but only one to actually be built.
@@ -149,22 +149,22 @@ requirements:
     - nccl <2.29            # [linux and cuda_compiler_version=="12.9" and arm_variant_type!="tegra"]
     - nvtx-c
     {% elif hip_compiler_version != "None" %}
-    - rocm-core {{ hip_compiler_version }}
-    - rocblas
-    - rocsolver
-    - rocrand
-    - rocprim
-    - rocthrust
+    - rocm-core {{ hip_compiler_version }}.*
+    - librocblas-devel
+    - librocsolver-devel
+    - librocrand-devel
+    - librocprim-devel
+    - librocthrust-devel
     - roctracer
-    - hipcub
-    - hipblas-common
-    - hipblas
-    - hipblaslt
-    - hipfft
-    - hipsparse
-    - hipsolver
-    - hiprand
-    - miopen-hip
+    - libhipcub-devel
+    - libhipblas-common-devel
+    - libhipblas-devel
+    - libhipblaslt-devel
+    - libhipfft-devel
+    - libhipsparse-devel
+    - libhipsolver-devel
+    - libhiprand-devel
+    - libmiopen-hip-devel
     - rccl                  # [linux]
     - libmagma-devel * rocm*
     {% endif %}
@@ -231,8 +231,8 @@ test:
     - {{ compiler('cuda') }}    # [cuda_compiler_version != "None"]
     - {{ compiler('hip') }}     # [hip_compiler_version != "None"]
     # Workaround, this should go in a libtorch-devel or similar package
-    - hipblas-common            # [hip_compiler_version != "None"]
-    - rocprim                   # [hip_compiler_version != "None"]
+    - libhipblas-common-devel  # [hip_compiler_version != "None"]
+    - librocprim-devel         # [hip_compiler_version != "None"]
     - cuda-nvrtc-dev            # [cuda_compiler_version != "None"]
     - nvtx-c                    # [cuda_compiler_version != "None"]
     - cmake
@@ -279,7 +279,7 @@ outputs:
     script: bld.bat     # [win]
     build:
       script_env:
-        - ROCK_THE_CONDA_ROCM_GPU_TARGETS
+        - CONDA_FORGE_DEFAULT_ROCM_GPU_TARGETS
       string: cuda{{ cuda_compiler_version | replace('.', '') }}_{{ blas_impl }}_py{{ CONDA_PY }}_h{{ PKG_HASH }}_{{ build }}  # [cuda_compiler_version != "None"]
       string: rocm{{ hip_compiler_version | replace('.', '') }}_{{ blas_impl }}_py{{ CONDA_PY }}_h{{ PKG_HASH }}_{{ build }}  # [hip_compiler_version != "None"]
       string: cpu_{{ blas_impl }}_py{{ CONDA_PY }}_h{{ PKG_HASH }}_{{ build }}                                                 # [cuda_compiler_version == "None" and hip_compiler_version == "None"]
@@ -335,21 +335,21 @@ outputs:
         - nccl <2.29            # [linux and cuda_compiler_version=="12.9" and arm_variant_type!="tegra"]
         - nvtx-c
         {% elif hip_compiler_version != "None" %}
-        - rocm-core {{ hip_compiler_version }}
-        - rocblas
-        - rocsolver
-        - rocrand
-        - rocprim
-        - rocthrust
+        - rocm-core {{ hip_compiler_version }}.*
+        - librocblas-devel
+        - librocsolver-devel
+        - librocrand-devel
+        - librocprim-devel
+        - librocthrust-devel
         - roctracer
-        - hipcub
-        - hipblas-common
-        - hipblas
-        - hipblaslt
-        - hipsparse
-        - hipsolver
-        - hiprand
-        - miopen-hip
+        - libhipcub-devel
+        - libhipblas-common-devel
+        - libhipblas-devel
+        - libhipblaslt-devel
+        - libhipsparse-devel
+        - libhipsolver-devel
+        - libhiprand-devel
+        - libmiopen-hip-devel
         - rccl                  # [linux]
         - libmagma-devel * rocm*
         {% endif %}
@@ -420,7 +420,7 @@ outputs:
   - name: pytorch-tests
     build:
       script_env:
-        - ROCK_THE_CONDA_ROCM_GPU_TARGETS
+        - CONDA_FORGE_DEFAULT_ROCM_GPU_TARGETS
       string: cuda{{ cuda_compiler_version | replace('.', '') }}_{{ blas_impl }}_py{{ CONDA_PY }}_h{{ PKG_HASH }}_{{ build }}  # [cuda_compiler_version != "None"]
       string: rocm{{ hip_compiler_version | replace('.', '') }}_{{ blas_impl }}_py{{ CONDA_PY }}_h{{ PKG_HASH }}_{{ build }}  # [hip_compiler_version != "None"]
       string: cpu_{{ blas_impl }}_py{{ CONDA_PY }}_h{{ PKG_HASH }}_{{ build }}                                                 # [cuda_compiler_version == "None" and hip_compiler_version == "None"]
@@ -441,8 +441,8 @@ outputs:
         - {{ compiler('cuda') }}       # [cuda_compiler_version != "None"]
         - {{ compiler('hip') }}        # [hip_compiler_version != "None"]
         # Workaround, this should go in a libtorch-devel or similar package
-        - hipblas-common            # [hip_compiler_version != "None"]
-        - rocprim                   # [hip_compiler_version != "None"]
+        - libhipblas-common-devel  # [hip_compiler_version != "None"]
+        - librocprim-devel         # [hip_compiler_version != "None"]
         - ninja
         - boto3
         - hypothesis
@@ -708,7 +708,7 @@ outputs:
   - name: pytorch-gpu   # [cuda_compiler_version != "None" or hip_compiler_version != "None"]
     build:
       script_env:
-        - ROCK_THE_CONDA_ROCM_GPU_TARGETS
+        - CONDA_FORGE_DEFAULT_ROCM_GPU_TARGETS
       string: cuda{{ cuda_compiler_version | replace('.', '') }}_{{ blas_impl }}_h{{ PKG_HASH }}_{{ build }}    # [cuda_compiler_version != "None"]
       string: rocm{{ hip_compiler_version | replace('.', '') }}_{{ blas_impl }}_h{{ PKG_HASH }}_{{ build }}     # [hip_compiler_version != "None"]
       string: cpu_{{ blas_impl }}_h{{ PKG_HASH }}_{{ build }}                                                   # [cuda_compiler_version == "None" and hip_compiler_version == "None"]
