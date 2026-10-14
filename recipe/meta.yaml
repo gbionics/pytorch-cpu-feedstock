@@ -346,6 +346,7 @@ outputs:
         - libhipblas-common-devel
         - libhipblas-devel
         - libhipblaslt-devel
+        - libhipfft-devel
         - libhipsparse-devel
         - libhipsolver-devel
         - libhiprand-devel
