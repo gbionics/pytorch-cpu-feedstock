@@ -1,6 +1,6 @@
 # if you wish to build release candidate number X, append the version string with "-rcX"
 {% set version = "2.11.0" %}
-{% set build = 3 %}
+{% set build = 4 %}
 
 # Use a higher build number for the GPU variants, to ensure that it's
 # preferred by conda's solver, and it's preferentially
@@ -230,9 +230,22 @@ test:
     # for CMake config to find cuda & nvrtc
     - {{ compiler('cuda') }}    # [cuda_compiler_version != "None"]
     - {{ compiler('hip') }}     # [hip_compiler_version != "None"]
-    # Workaround, this should go in a libtorch-devel or similar package
+    # Development dependencies for Torch CMake configuration and extensions.
+    - hip-devel  # [hip_compiler_version != "None"]
+    - librocblas-devel  # [hip_compiler_version != "None"]
+    - librocsolver-devel  # [hip_compiler_version != "None"]
+    - librocrand-devel  # [hip_compiler_version != "None"]
+    - librocprim-devel  # [hip_compiler_version != "None"]
+    - librocthrust-devel  # [hip_compiler_version != "None"]
+    - libhipcub-devel  # [hip_compiler_version != "None"]
     - libhipblas-common-devel  # [hip_compiler_version != "None"]
-    - librocprim-devel         # [hip_compiler_version != "None"]
+    - libhipblas-devel  # [hip_compiler_version != "None"]
+    - libhipblaslt-devel  # [hip_compiler_version != "None"]
+    - libhipfft-devel  # [hip_compiler_version != "None"]
+    - libhipsparse-devel  # [hip_compiler_version != "None"]
+    - libhipsolver-devel  # [hip_compiler_version != "None"]
+    - libhiprand-devel  # [hip_compiler_version != "None"]
+    - libmiopen-hip-devel  # [hip_compiler_version != "None"]
     - cuda-nvrtc-dev            # [cuda_compiler_version != "None"]
     - nvtx-c                    # [cuda_compiler_version != "None"]
     - cmake
@@ -441,9 +454,22 @@ outputs:
         # for torch.compile tests
         - {{ compiler('cuda') }}       # [cuda_compiler_version != "None"]
         - {{ compiler('hip') }}        # [hip_compiler_version != "None"]
-        # Workaround, this should go in a libtorch-devel or similar package
+        # Development dependencies for Torch CMake configuration and extensions.
+        - hip-devel  # [hip_compiler_version != "None"]
+        - librocblas-devel  # [hip_compiler_version != "None"]
+        - librocsolver-devel  # [hip_compiler_version != "None"]
+        - librocrand-devel  # [hip_compiler_version != "None"]
+        - librocprim-devel  # [hip_compiler_version != "None"]
+        - librocthrust-devel  # [hip_compiler_version != "None"]
+        - libhipcub-devel  # [hip_compiler_version != "None"]
         - libhipblas-common-devel  # [hip_compiler_version != "None"]
-        - librocprim-devel         # [hip_compiler_version != "None"]
+        - libhipblas-devel  # [hip_compiler_version != "None"]
+        - libhipblaslt-devel  # [hip_compiler_version != "None"]
+        - libhipfft-devel  # [hip_compiler_version != "None"]
+        - libhipsparse-devel  # [hip_compiler_version != "None"]
+        - libhipsolver-devel  # [hip_compiler_version != "None"]
+        - libhiprand-devel  # [hip_compiler_version != "None"]
+        - libmiopen-hip-devel  # [hip_compiler_version != "None"]
         - ninja
         - boto3
         - hypothesis
