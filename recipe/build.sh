@@ -205,6 +205,8 @@ elif [[ ${hip_compiler_version} != "None" ]]; then
     export ROCM_HOME="${BUILD_PREFIX}"
     export HIP_PATH="${BUILD_PREFIX}"
     export HIP_ROOT_DIR="${BUILD_PREFIX}"
+    # Caffe2 reads this separately from ROCM_PATH; use the host ROCm libraries.
+    export ROCM_SOURCE_DIR="${PREFIX}"
     export NCCL_ROOT_DIR=$PREFIX
     export NCCL_INCLUDE_DIR=$PREFIX/include
     export USE_SYSTEM_NCCL=1
