@@ -207,6 +207,13 @@ elif [[ ${hip_compiler_version} != "None" ]]; then
     export HIP_ROOT_DIR="${BUILD_PREFIX}"
     # Caffe2 reads this separately from ROCM_PATH; use the host ROCm libraries.
     export ROCM_SOURCE_DIR="${PREFIX}"
+    # Conda's toolchain restricts find_library/find_path to the environment,
+    # but find_package(CONFIG) otherwise also searches the system. In particular,
+    # an optional system hipsparselt adds /opt/rocm/include and /opt/rocm/lib to
+    # torch_hip, mixing system RCCL headers with the Conda RCCL library.
+    # Keep build-prefix CMake packages available alongside the host packages.
+    export CMAKE_FIND_ROOT_PATH="${CMAKE_FIND_ROOT_PATH};${BUILD_PREFIX}"
+    export CMAKE_FIND_ROOT_PATH_MODE_PACKAGE=ONLY
     export NCCL_ROOT_DIR=$PREFIX
     export NCCL_INCLUDE_DIR=$PREFIX/include
     export USE_SYSTEM_NCCL=1
